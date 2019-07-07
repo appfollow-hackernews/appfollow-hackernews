@@ -1,0 +1,29 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: services/backend/Dockerfile
+    depends_on:
+      - db
+      - worker
+    ports:
+      - "8000:8000"
+    command: ./wait-for-it.sh db:3306 -t 120 -- bash entrypoint.sh backend
+  worker:
+    build:
+      context: .
+      dockerfile: services/backend/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    command: ./wait-for-it.sh backend:8000 -t 120 -- bash entrypoint.sh worker
+  db:
+    image: "mysql:5.7"
+    environment:
+       MYSQL_DATABASE: 'backend-db'
+#       MYSQL_USER: 'root'
+#       MYSQL_PASSWORD: 'password'
+       MYSQL_ROOT_PASSWORD: 'password'
+  rabbitmq:
+    image: "rabbitmq:3"
